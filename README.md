@@ -14,21 +14,39 @@ When someone sends a voice message, the bot:
 - A Telegram bot token (from [@BotFather](https://t.me/BotFather))
 - An [OpenAI API key](https://platform.openai.com/api-keys) for voice transcription
 
-## Setup
+## Installation
 
 ### 1. Create a Telegram bot
 
 Open [@BotFather](https://t.me/BotFather), send `/newbot`, pick a name and username. Copy the token (`123456789:AAH...`).
 
-### 2. Install the plugin
+### 2. Install the official Telegram plugin first
 
 In Claude Code:
 ```
-/install-plugin https://github.com/dastanko/claude-telegram-whisper
-/reload-plugins
+/plugin install telegram@claude-plugins-official
 ```
 
-### 3. Configure tokens
+### 3. Replace with the fork
+
+Clone this repo and replace the official plugin files with the fork:
+
+```bash
+# Clone the fork
+git clone https://github.com/dastanko/claude-telegram-whisper.git ~/Projects/claude-telegram-whisper
+
+# Replace the marketplace copy with a symlink to the fork
+PLUGIN_DIR=~/.claude/plugins/marketplaces/claude-plugins-official/external_plugins/telegram
+mv "$PLUGIN_DIR" "${PLUGIN_DIR}.backup"
+ln -s ~/Projects/claude-telegram-whisper "$PLUGIN_DIR"
+
+# Install dependencies
+cd "$PLUGIN_DIR" && bun install
+```
+
+> To revert to the official plugin: `rm "$PLUGIN_DIR" && mv "${PLUGIN_DIR}.backup" "$PLUGIN_DIR"`
+
+### 4. Configure tokens
 
 ```
 /telegram:configure 123456789:AAHfiqksKZ8...
@@ -42,7 +60,7 @@ Now add your OpenAI API key to the same file:
 echo "OPENAI_API_KEY=sk-..." >> ~/.claude/channels/telegram/.env
 ```
 
-Or edit `~/.claude/channels/telegram/.env` manually — it should look like:
+Or edit `~/.claude/channels/telegram/.env` directly:
 
 ```
 TELEGRAM_BOT_TOKEN=123456789:AAHfiqksKZ8...
@@ -51,13 +69,15 @@ OPENAI_API_KEY=sk-proj-...
 
 > Without `OPENAI_API_KEY`, voice messages will still arrive but won't be transcribed.
 
-### 4. Launch with the channel flag
+### 5. Launch Claude Code
 
 ```sh
-claude --channels plugin:telegram@dastanko/claude-telegram-whisper
+claude --channels plugin:telegram@claude-plugins-official
 ```
 
-### 5. Pair your Telegram account
+The symlink makes Claude Code load the fork transparently.
+
+### 6. Pair your Telegram account
 
 DM your bot on Telegram — it replies with a 6-character code. In Claude Code:
 
@@ -65,13 +85,21 @@ DM your bot on Telegram — it replies with a 6-character code. In Claude Code:
 /telegram:access pair <code>
 ```
 
-### 6. Lock it down
+### 7. Lock it down
 
 Once paired, switch to allowlist mode so strangers don't get pairing replies:
 
 ```
 /telegram:access policy allowlist
 ```
+
+## Updating
+
+```bash
+cd ~/Projects/claude-telegram-whisper && git pull
+```
+
+The symlink means Claude Code picks up changes on next restart — no reinstall needed.
 
 ## Voice transcription
 
